@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Résumé d'Articles - RAS</title>
+    <!-- Importation d'une police moderne -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Reset de base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Style général */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            padding-top: 60px; /* Pour laisser la place à la barre de nav */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Barre de navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background-color: #333;
+            padding: 10px 0;
+            z-index: 1000;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        nav ul li {
+            margin: 0 15px;
+        }
+
+        nav ul li a {
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 700;
+            transition: color 0.3s;
+        }
+
+        nav ul li a:hover {
+            color: #00adb5;
+        }
+
+        nav ul li select {
+            background: #444;
+            color: #fff;
+            border: none;
+            font-size: 16px;
+            font-weight: 700;
+            border-radius: 5px;
+            padding: 5px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        nav ul li select:hover {
+            background: #00adb5;
+        }
+
+        /* Conteneur principal */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            margin-top: 20px; /* Espace sous la pub du haut */
+        }
+
+        /* Conteneur des articles */
+        .articles-container {
+            display: flex;
+            gap: 30px;
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .articles-wrapper {
+            display: flex;
+            flex-wrap: nowrap;
+        }
+
+        .article-card {
+            background-color: #ffffffcc;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            width: 300px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .article-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .article-meta {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        .article-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        .article-summary {
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+            line-height: 1.8;
+            height: 100px;
+            overflow: hidden;
+        }
+
+        .read-more {
+            color: #00adb5;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            border-bottom: 2px solid #00adb5;
+            padding-bottom: 3px;
+            transition: color 0.3s, border-color 0.3s, transform 0.3s;
+        }
+
+        .read-more:hover {
+            color: #007a80;
+            border-color: #007a80;
+            transform: scale(1.05);
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.3s, opacity 0.3s;
+            z-index: 1000;
+        }
+
+        .modal-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            text-align: left;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ddd;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .modal-close:hover {
+            background: #bbb;
+        }
+
+        .modal-content h2 {
+            margin-bottom: 15px;
+        }
+
+        .modal-content p {
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Barre de navigation -->
+    <nav>
+        <ul>
+            <li><a href="#home">Accueil</a></li>
+            <li><a href="#articles">Articles récents</a></li>
+            <li>
+                Catégories :
+                <select id="category-select" onchange="filterByCategory()">
+                    <option value="all">Toutes</option>
+                    <option value="politique">Politique</option>
+                    <option value="sport">Sport</option>
+                    <option value="economie">Économie</option>
+                    <option value="technologie">Technologie</option>
+                </select>
+            </li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Section principale -->
+    <div class="main-content">
+        <div class="articles-container">
+            <div class="articles-wrapper" id="articles-wrapper">
+                <!-- Articles générés dynamiquement -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="modal-overlay">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">Fermer</button>
+            <h2 id="modal-title"></h2>
+            <p id="modal-fulltext"></p>
+        </div>
+    </div>
+
+    <script>
+        let articlesData = [];
+        let originalArticlesHTML = "";
+
+        // Charger les articles depuis summaries.json
+        fetch('summaries.json')
+            .then(response => response.json())
+            .then(data => {
+                articlesData = data;
+                initArticles();
+            })
+            .catch(error => console.error("Erreur lors du chargement des articles :", error));
+
+        function buildArticlesList(articles) {
+            let html = "";
+            articles.forEach(article => {
+                html += `
+                <div class="article-card" data-category="${article.category}">
+                    <div class="article-meta">${article.source}</div>
+                    <div class="article-title">${article.title}</div>
+                    <div class="article-summary" data-fulltext="${article.summary.replace(/"/g, '&quot;')}">
+                        ${article.summary.slice(0, 150)}...
+                    </div>
+                    <a href="#" class="read-more" onclick="showFullSummary(this)">Lire plus</a>
+                </div>`;
+            });
+            return html;
+        }
+
+        function initArticles() {
+            const wrapper = document.getElementById('articles-wrapper');
+            const html = buildArticlesList(articlesData);
+            wrapper.innerHTML = html;
+            originalArticlesHTML = html;
+        }
+
+        function showFullSummary(element) {
+            const card = element.closest('.article-card');
+            const titleElement = card.querySelector('.article-title');
+            const summaryElement = card.querySelector('.article-summary');
+            const fullText = summaryElement.getAttribute('data-fulltext');
+            const titleText = titleElement.textContent;
+
+            document.getElementById('modal-title').textContent = titleText;
+            document.getElementById('modal-fulltext').textContent = fullText;
+
+            const modal = document.getElementById('modal-overlay');
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal-overlay');
+            modal.classList.remove('show');
+        }
+
+        function filterByCategory() {
+            const selectedCategory = document.getElementById('category-select').value;
+            const wrapper = document.getElementById('articles-wrapper');
+
+            if (selectedCategory === 'all') {
+                wrapper.innerHTML = originalArticlesHTML;
+            } else {
+                const filtered = articlesData.filter(a => a.category === selectedCategory);
+                const html = buildArticlesList(filtered);
+                wrapper.innerHTML = html;
+            }
+        }
+    </script>
+</body>
+</html>
